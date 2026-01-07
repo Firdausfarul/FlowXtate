@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, TrendingUp, DollarSign, Shield, Zap, Users, ArrowRight, CheckCircle2, Coins, Clock } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   const features = [
@@ -81,10 +82,12 @@ export default function Home() {
                   <ArrowRight className="h-5 w-5" />
                 </Button>
               </WalletConnectButton>
-              <Button size="lg" variant="outline" className="gap-2 text-base h-14 px-8 border-yellow-500 text-yellow-700 hover:bg-yellow-50">
-                <Building2 className="h-5 w-5" />
-                Browse Properties
-              </Button>
+              <Link href="/properties">
+                <Button size="lg" variant="outline" className="gap-2 text-base h-14 px-8 border-yellow-500 text-yellow-700 hover:bg-yellow-50">
+                  <Building2 className="h-5 w-5" />
+                  Browse Properties
+                </Button>
+              </Link>
             </div>
 
             {/* Trust Indicators */}

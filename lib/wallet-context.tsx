@@ -26,7 +26,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isInstalled, setIsInstalled] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if Crossmark is installed
+  // Check if Crossmark is installed and restore session
   useEffect(() => {
     const checkInstallation = async () => {
       try {
@@ -37,6 +37,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         setIsInstalled(false);
       }
     };
+
+    // Restore wallet session from localStorage
+    const savedAddress = localStorage.getItem('crossmark_address');
+    if (savedAddress) {
+      setAccount({ address: savedAddress });
+    }
 
     checkInstallation();
   }, []);
