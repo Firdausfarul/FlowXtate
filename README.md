@@ -8,10 +8,12 @@ FlowXtate is a fractional real estate investment platform built on the **XRP Led
 
 FlowXtate leverages the advanced features of the XRP Ledger to provide a secure, liquid, and innovative investment experience.
 
-### 1. **Native DEX (Order Book Architecture)**
-We utilize the XRPL's built-in Central Limit Order Book (CLOB) to provide 24/7 liquidity.
+### 1. **Native DEX (Order Book Architecture & Automated IDO)**
+We utilize the XRPL's built-in Central Limit Order Book (CLOB) to provide 24/7 liquidity and a seamless launchpad for new assets.
+
+- **Automated Initial Offering (IDO):** When a new property is tokenized on FlowXtate, the platform automatically triggers an `OfferCreate` transaction. This places the entire initial supply on the Native DEX as a sell offer at the target valuation price. This ensures that every property has **Instant Liquidity** and a transparent public price from the moment of creation.
 - **Why DEX over AMM?** We intentionally avoided the XRPL AMM (Constant Product) for property tokens. Real estate transactions are typically large relative to the liquidity pool; in a constant product AMM, this would cause massive **Price Impact (Slippage)**. By using the Native DEX Order Book, we allow for precise pricing and institutional-grade trading without the inefficiencies of an AMM formula.
-- **How we used it:** Every property token is paired with native **XRP** or other stablecoins. Users can place **Limit Orders** using the `OfferCreate` transaction type for transparent price discovery.
+- **How we used it:** Every property token is paired with native **XRP** or other stablecoins. Users can place **Limit Orders** to buy into the initial offering or trade in the secondary market.
 
 ### 2. **Clawback (The "Acquisition" & Asset Recovery Engine)**
 In traditional real estate and private equity, one of the greatest hurdles for fractionalized assets is the **Coordination Problem**. When an institutional buyer or a single entity expresses a desire to acquire 100% of a property to repurpose or sell it, coordinating hundreds of small, geographically dispersed fractional holders is nearly impossible. This often leads to "deadlock" where the asset becomes illiquid or undervalued.
