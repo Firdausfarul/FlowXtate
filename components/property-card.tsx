@@ -61,16 +61,16 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </CardHeader>
 
         <CardContent className="flex-1 space-y-4">
-          {/* Daily Yield */}
+          {/* Monthly Yield */}
           {property.dailyYield && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-green-600" />
-                  <span className="text-xs text-gray-600">Daily Yield</span>
+                  <span className="text-xs text-gray-600">Monthly Yield</span>
                 </div>
                 <span className="text-lg font-bold text-green-600">
-                  {property.dailyYield}%
+                  {property.dailyYield} XRP
                 </span>
               </div>
             </div>

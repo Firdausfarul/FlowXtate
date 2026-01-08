@@ -21,6 +21,9 @@ interface Property {
   currencyCodeHex?: string;
 }
 
+// RLUSD issuer on XRPL
+const RLUSD_ISSUER = "rQhWct2fv4Vc4KRjRgMrxa8xPN9Zx9iLKV";
+
 interface UserTrustline {
   tokenCode: string;
   propertyName: string;
@@ -46,9 +49,17 @@ export function TrustlineManager({ kycData }: TrustlineManagerProps) {
 
   const loadProperties = () => {
     const storedTokens = localStorage.getItem('issued_tokens');
-    if (storedTokens) {
-      setProperties(JSON.parse(storedTokens));
-    }
+    const tokenProperties = storedTokens ? JSON.parse(storedTokens) : [];
+
+    // Add RLUSD as an additional trustline option
+    const rlusdProperty: Property = {
+      tokenCode: "RLUSD",
+      propertyName: "Ripple USD",
+      issuerAddress: RLUSD_ISSUER,
+      currencyCodeHex: "USD",
+    };
+
+    setProperties([rlusdProperty, ...tokenProperties]);
   };
 
   const loadUserTrustlines = () => {
@@ -75,7 +86,9 @@ export function TrustlineManager({ kycData }: TrustlineManagerProps) {
       const currencyCode = selectedProperty.currencyCodeHex ||
         Buffer.from(selectedProperty.tokenCode.padEnd(3, '\0')).toString('hex').toUpperCase().padEnd(40, '0');
 
-      // Create TrustSet transaction
+      const isRLUSD = selectedProperty.tokenCode === "RLUSD";
+
+      // Step 1: User creates trustline via Crossmark
       const trustSetTx: any = {
         TransactionType: 'TrustSet',
         Account: account.address,
@@ -98,12 +111,51 @@ export function TrustlineManager({ kycData }: TrustlineManagerProps) {
         throw new Error('Trustline creation failed');
       }
 
-      // Save trustline to localStorage
+      // Step 2: Automatically authorize the trustline using issuer wallet (only for property tokens, not RLUSD)
+      if (!isRLUSD) {
+        // Get token data to access issuer seed
+        const storedTokens = localStorage.getItem('issued_tokens') || '[]';
+        const tokens = JSON.parse(storedTokens);
+        const token = tokens.find((t: any) => t.tokenCode === selectedProperty.tokenCode);
+
+        if (!token) {
+          throw new Error('Token not found');
+        }
+
+        const { Wallet } = await import('xrpl');
+        const issuerWallet = Wallet.fromSeed(token.issuerSeed);
+
+        const authorizeTx: any = {
+          TransactionType: 'TrustSet',
+          Account: issuerWallet.address,
+          LimitAmount: {
+            currency: currencyCode,
+            issuer: account.address,
+            value: '0',
+          },
+          Flags: 0x00010000, // tfSetfAuth - authorize the trustline
+          Fee: '12',
+        };
+
+        const prepared = await client.autofill(authorizeTx);
+        const signed = issuerWallet.sign(prepared);
+        const authResult = await client.submitAndWait(signed.tx_blob);
+
+        console.log('Trustline authorization result:', authResult.result.meta?.TransactionResult);
+
+        if (authResult.result.meta?.TransactionResult !== 'tesSUCCESS') {
+          throw new Error('Trustline authorization failed');
+        }
+      } else {
+        console.log('RLUSD trustline created - no authorization needed');
+      }
+
+      // Save trustline to localStorage with authorized status
       const newTrustline: UserTrustline = {
         tokenCode: selectedProperty.tokenCode,
         propertyName: selectedProperty.propertyName,
         issuerAddress: selectedProperty.issuerAddress,
-        status: "pending_auth", // Waiting for issuer authorization (RequireAuth)
+        status: "authorized", // Automatically authorized
         limit: trustlineLimit,
         createdAt: new Date().toISOString(),
       };
@@ -113,24 +165,10 @@ export function TrustlineManager({ kycData }: TrustlineManagerProps) {
       allTrustlines.push(newTrustline);
       localStorage.setItem('user_trustlines', JSON.stringify(allTrustlines));
 
-      // Add to pending authorizations for admin
-      const pendingAuth = localStorage.getItem('pending_trustline_auth') || '[]';
-      const authQueue = JSON.parse(pendingAuth);
-      authQueue.push({
-        userAddress: account.address,
-        userName: kycData.fullName,
-        tokenCode: selectedProperty.tokenCode,
-        propertyName: selectedProperty.propertyName,
-        issuerAddress: selectedProperty.issuerAddress,
-        currencyCodeHex: currencyCode,
-        requestedAt: new Date().toISOString(),
-      });
-      localStorage.setItem('pending_trustline_auth', JSON.stringify(authQueue));
-
       await client.disconnect();
       loadUserTrustlines();
       setSelectedProperty(null);
-      alert('Trustline created! Waiting for admin authorization...');
+      alert('Trustline created and automatically authorized! You can now trade this token.');
     } catch (err: any) {
       console.error('Trustline creation error:', err);
       alert(err.message || 'Failed to create trustline');
@@ -180,7 +218,7 @@ export function TrustlineManager({ kycData }: TrustlineManagerProps) {
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-600">
           Create trustlines to property tokens to enable trading.
-          Admin must authorize each trustline due to KYC requirements.
+          Trustlines are automatically authorized after creation.
         </p>
 
         {/* Existing Trustlines */}
@@ -314,11 +352,11 @@ export function TrustlineManager({ kycData }: TrustlineManagerProps) {
           )}
         </div>
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-          <p className="text-xs text-yellow-900 font-semibold mb-1">Important</p>
-          <p className="text-xs text-yellow-700">
-            After creating a trustline, you must wait for admin authorization.
-            This is required for KYC compliance. You'll be notified once authorized.
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+          <p className="text-xs text-green-900 font-semibold mb-1">Automatic Authorization</p>
+          <p className="text-xs text-green-700">
+            After creating a trustline, it will be automatically authorized.
+            You can start trading immediately after the transaction completes.
           </p>
         </div>
       </CardContent>

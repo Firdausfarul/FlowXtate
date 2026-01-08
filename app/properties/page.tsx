@@ -63,9 +63,9 @@ export default function PropertiesPage() {
     if (filterYield !== "all") {
       filtered = filtered.filter((p) => {
         const yield_ = parseFloat(p.dailyYield || "0");
-        if (filterYield === "low") return yield_ < 3;
-        if (filterYield === "medium") return yield_ >= 3 && yield_ < 5;
-        if (filterYield === "high") return yield_ >= 5;
+        if (filterYield === "low") return yield_ < 100;
+        if (filterYield === "medium") return yield_ >= 100 && yield_ < 500;
+        if (filterYield === "high") return yield_ >= 500;
         return true;
       });
     }
@@ -105,7 +105,7 @@ export default function PropertiesPage() {
             Property Marketplace
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl">
-            Invest in tokenized real estate with daily yields. Buy, sell, and trade property tokens 24/7 on XRPL DEX.
+            Invest in tokenized real estate with monthly yields. Buy, sell, and trade property tokens 24/7 on XRPL DEX.
           </p>
         </div>
       </div>
@@ -134,9 +134,9 @@ export default function PropertiesPage() {
               </SelectTrigger>
               <SelectContent className="bg-white">
                 <SelectItem value="all">All Yields</SelectItem>
-                <SelectItem value="low">Low (&lt; 3%)</SelectItem>
-                <SelectItem value="medium">Medium (3-5%)</SelectItem>
-                <SelectItem value="high">High (&gt; 5%)</SelectItem>
+                <SelectItem value="low">Low (&lt; 100 XRP)</SelectItem>
+                <SelectItem value="medium">Medium (100-500 XRP)</SelectItem>
+                <SelectItem value="high">High (&gt; 500 XRP)</SelectItem>
               </SelectContent>
             </Select>
 

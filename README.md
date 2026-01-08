@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FlowXtate - Tokenized Real Estate on XRPL 🏠🚀
 
-## Getting Started
+FlowXtate is a fractional real estate investment platform built on the **XRP Ledger (XRPL)**. It democratizes access to high-yield property investments by tokenizing real-world assets, allowing anyone to own a piece of a property and earn daily rental dividends.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌟 Key XRPL Features Used
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+FlowXtate leverages the advanced features of the XRP Ledger to provide a secure, liquid, and innovative investment experience.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. **Native DEX (Order Book Architecture)**
+We utilize the XRPL's built-in Central Limit Order Book (CLOB) to provide 24/7 liquidity.
+- **Why DEX over AMM?** We intentionally avoided the XRPL AMM (Constant Product) for property tokens. Real estate transactions are typically large relative to the liquidity pool; in a constant product AMM, this would cause massive **Price Impact (Slippage)**. By using the Native DEX Order Book, we allow for precise pricing and institutional-grade trading without the inefficiencies of an AMM formula.
+- **How we used it:** Every property token is paired with native **XRP** or other stablecoins. Users can place **Limit Orders** using the `OfferCreate` transaction type for transparent price discovery.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 2. **Clawback (The "Acquisition" & Security Feature)**
+This is our unique exit strategy for fractional investors and a critical security tool.
+- **How we used it:** 
+    - **Acquisitions:** When a major investor (a "Sultan") wants to acquire 100% of a property, the platform uses the **Clawback** functionality to retrieve tokens and distribute fair-share payouts.
+    - **Security/Hack Recovery:** In the event of a verified wallet hack, the issuer can use Clawback to return tokens to the rightful owner, ensuring institutional-grade asset protection.
+- **Requirement:** All property issuer accounts are initialized with the `lsfAllowTrustLineClawback` flag enabled.
 
-## Learn More
+### 3. **Freeze Functionality (Regulatory Compliance)**
+To comply with global real estate regulations, the platform can restrict token movement under specific legal conditions.
+- **How we used it:** We leverage XRPL's **Global Freeze** and **Individual Freeze** flags. This allows the platform to halt trading of a specific property token if legal disputes arise, ensuring the platform remains compliant with local laws.
 
-To learn more about Next.js, take a look at the following resources:
+### 4. **Whitelisting via Trustlines & DID**
+Real estate is a regulated asset that often requires KYC/AML.
+- **How we used it:** By requiring **Trustlines**, we create a natural whitelisting mechanism. Only users who have been verified and have explicitly "trusted" the issuer can hold the tokens. Combined with **Decentralized Identifiers (DID)**, we ensure that every token holder is a verified investor.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 5. **Path Payments (Seamless Swaps)**
+FlowXtate provides a "Swap" interface that makes investing easy, even if you don't hold the required currency.
+- **How we used it:** We use `ripple_path_find` to find the most efficient route between currencies. A user can buy a property token using **XRP**, and the XRPL automatically converts it through the DEX in a single atomic `Payment` transaction.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 6. **Crossmark Wallet Integration**
+We provide a seamless onboarding experience using the **Crossmark SDK**.
+- **Why Crossmark?** We chose Crossmark for its superior developer experience and its status as a browser extension. This ensures a **smooth, friction-less demo** and a professional "Web3-native" feel that doesn't require switching between mobile devices during a trade.
+- **How we used it:** Users connect wallets and sign transactions (Trustlines, Offers, Payments) securely without exposing private keys.
 
-## Deploy on Vercel
+### 7. **Decentralized Identifiers (DID)**
+To ensure compliance and security in real estate transactions, we incorporate DID.
+- **How we used it:** Users can link their DID to their FlowXtate profile, facilitating a decentralized KYC process that respects user privacy.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🚀 Features
+
+- **Property Marketplace:** Browse and invest in fractionalized real estate.
+- **Daily Yields:** Automated dividend distribution directly to investor wallets.
+- **Investor Dashboard:** Manage KYC verification and property trustlines.
+- **Admin Suite:** Tools for minting property tokens, distributing yields, and processing acquisitions.
+- **Real-time Orderbook:** View market depth for every property token on the XRPL DEX.
+
+---
+
+## 🛠 Tech Stack
+
+- **Frontend:** Next.js 14 (App Router), TypeScript, Tailwind CSS
+- **XRPL Integration:** `xrpl.js`, `@crossmarkio/sdk`
+- **UI Components:** Shadcn UI, Lucide React
+- **State Management:** React Context API
+
+---
+
+## 🏁 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- [Crossmark Wallet Extension](https://crossmark.io/)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-repo/flowxtate.git
+   cd flowxtate
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 👥 Team CSL - University of Indonesia
+
+- **Fahrul:** Lead Developer / XRPL Architect
+- **Angga:** Developer
+- **Mika:** Developer
+
+---
+
+*FlowXtate: Democratizing Real Estate, One Ledger Entry at a Time.*

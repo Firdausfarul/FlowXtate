@@ -62,37 +62,39 @@ export function OrderbookDisplay({ property }: OrderbookDisplayProps) {
 
       await client.disconnect();
 
-      // Parse best bid
+      // Parse best bid (people buying tokens for XRP)
+      // Taker gets token, taker pays XRP
       let bestBid = null;
       if (bidsResponse.result.offers.length > 0) {
         const offer = bidsResponse.result.offers[0];
-        const takerGets = typeof offer.TakerGets === 'string'
+        const tokenAmount = typeof offer.TakerGets === 'string'
           ? parseFloat(offer.TakerGets) / 1000000
           : parseFloat(offer.TakerGets.value);
-        const takerPays = typeof offer.TakerPays === 'string'
+        const xrpAmount = typeof offer.TakerPays === 'string'
           ? parseFloat(offer.TakerPays) / 1000000
           : parseFloat(offer.TakerPays.value);
 
         bestBid = {
-          price: (takerPays / takerGets).toFixed(6),
-          amount: takerGets.toFixed(2),
+          price: (xrpAmount / tokenAmount).toFixed(6), // XRP per token
+          amount: tokenAmount.toFixed(2),
         };
       }
 
-      // Parse best ask
+      // Parse best ask (people selling tokens for XRP)
+      // Taker gets XRP, taker pays token
       let bestAsk = null;
       if (asksResponse.result.offers.length > 0) {
         const offer = asksResponse.result.offers[0];
-        const takerGets = typeof offer.TakerGets === 'string'
+        const xrpAmount = typeof offer.TakerGets === 'string'
           ? parseFloat(offer.TakerGets) / 1000000
           : parseFloat(offer.TakerGets.value);
-        const takerPays = typeof offer.TakerPays === 'string'
+        const tokenAmount = typeof offer.TakerPays === 'string'
           ? parseFloat(offer.TakerPays) / 1000000
           : parseFloat(offer.TakerPays.value);
 
         bestAsk = {
-          price: (takerGets / takerPays).toFixed(6),
-          amount: takerPays.toFixed(2),
+          price: (xrpAmount / tokenAmount).toFixed(6), // XRP per token
+          amount: tokenAmount.toFixed(2),
         };
       }
 

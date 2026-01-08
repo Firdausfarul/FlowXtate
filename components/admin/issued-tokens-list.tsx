@@ -94,15 +94,15 @@ export function IssuedTokensList() {
                   <div>
                     <p className="text-xs text-gray-600">Valuation</p>
                     <p className="text-sm font-semibold text-gray-900">
-                      {Number(token.totalValuation).toLocaleString()} RLUSD
+                      {Number(token.totalValuation).toLocaleString()} XRP
                     </p>
                   </div>
                 )}
                 {token.dailyYield && (
                   <div>
-                    <p className="text-xs text-gray-600">Daily Yield</p>
+                    <p className="text-xs text-gray-600">Monthly Yield</p>
                     <p className="text-sm font-semibold text-green-600">
-                      {token.dailyYield}%
+                      {token.dailyYield} XRP
                     </p>
                   </div>
                 )}

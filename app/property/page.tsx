@@ -5,10 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp, MapPin } from "lucide-react";
+import { ArrowLeft, TrendingUp, MapPin, Building2 } from "lucide-react";
 import { TradingInterface } from "@/components/trading/trading-interface";
 import { OrderbookDisplay } from "@/components/trading/orderbook-display";
 import { ActiveOrders } from "@/components/trading/active-orders";
+import { AcquisitionDialog } from "@/components/trading/acquisition-dialog";
 import Link from "next/link";
 import { useWallet } from "@/lib/wallet-context";
 
@@ -33,6 +34,7 @@ function PropertyDetailContent() {
 
   const [property, setProperty] = useState<PropertyData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAcquisitionDialog, setShowAcquisitionDialog] = useState(false);
 
   useEffect(() => {
     // Load property from localStorage
@@ -98,10 +100,10 @@ function PropertyDetailContent() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {property.dailyYield && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-xs text-gray-600 mb-1">Daily Yield</p>
+                    <p className="text-xs text-gray-600 mb-1">Monthly Yield</p>
                     <div className="flex items-center gap-2">
                       <TrendingUp className="h-4 w-4 text-green-600" />
-                      <p className="text-lg font-bold text-green-600">{property.dailyYield}%</p>
+                      <p className="text-lg font-bold text-green-600">{property.dailyYield} XRP</p>
                     </div>
                   </div>
                 )}
@@ -132,9 +134,18 @@ function PropertyDetailContent() {
 
             {/* Property Image Placeholder */}
             <div className="hidden md:block ml-6">
-              <div className="w-48 h-48 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg flex items-center justify-center">
+              <div className="w-48 h-48 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg flex items-center justify-center mb-4">
                 <div className="text-7xl">🏢</div>
               </div>
+              {isConnected && (
+                <Button
+                  onClick={() => setShowAcquisitionDialog(true)}
+                  className="w-48 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold"
+                >
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Acquire Property
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -164,6 +175,20 @@ function PropertyDetailContent() {
           </div>
         )}
       </div>
+
+      {/* Acquisition Dialog */}
+      {showAcquisitionDialog && (
+        <AcquisitionDialog
+          property={{
+            propertyName: property.propertyName,
+            tokenCode: property.tokenCode,
+            totalValuation: property.totalValuation,
+            issuerAddress: property.issuerAddress,
+            currencyCodeHex: property.currencyCodeHex,
+          }}
+          onClose={() => setShowAcquisitionDialog(false)}
+        />
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Plus, Coins, Lock, Ban, Users } from "lucide-react";
 import { IssueTokenDialog } from "@/components/admin/issue-token-dialog";
 import { IssuedTokensList } from "@/components/admin/issued-tokens-list";
 import { KYCApprovalDashboard } from "@/components/admin/kyc-approval-dashboard";
+import { YieldDistributor } from "@/components/admin/yield-distributor";
 
 export default function AdminPage() {
   const [showIssueDialog, setShowIssueDialog] = useState(false);
@@ -39,10 +40,14 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="tokens" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2 bg-yellow-100">
+        <TabsList className="grid w-full max-w-2xl grid-cols-3 bg-yellow-100">
           <TabsTrigger value="tokens" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">
             <Coins className="h-4 w-4 mr-2" />
             Token Management
+          </TabsTrigger>
+          <TabsTrigger value="yields" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">
+            <Coins className="h-4 w-4 mr-2" />
+            Yield Distribution
           </TabsTrigger>
           <TabsTrigger value="kyc" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">
             <Users className="h-4 w-4 mr-2" />
@@ -95,6 +100,10 @@ export default function AdminPage() {
 
           {/* Issued Tokens List */}
           <IssuedTokensList key={refreshKey} />
+        </TabsContent>
+
+        <TabsContent value="yields" className="space-y-6">
+          <YieldDistributor />
         </TabsContent>
 
         <TabsContent value="kyc" className="space-y-6">

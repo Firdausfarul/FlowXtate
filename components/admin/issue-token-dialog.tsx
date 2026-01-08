@@ -23,6 +23,10 @@ interface FormData {
   dailyYield: string;
 }
 
+// Fixed issuer and distributor accounts for all tokens
+const FIXED_ISSUER_SEED = "sEdTd7qTkUR7afMUJ5JFRXP6qAfVFa4";
+const FIXED_DISTRIBUTOR_SEED = "sEd7JFn2cnCc6jPupajqkZqKGHewwNu";
+
 export function IssueTokenDialog({ open, onOpenChange, onSuccess }: IssueTokenDialogProps) {
   const { account } = useWallet();
   const [step, setStep] = useState<'form' | 'creating' | 'success' | 'error'>('form');
@@ -69,71 +73,124 @@ export function IssueTokenDialog({ open, onOpenChange, onSuccess }: IssueTokenDi
       const client = new Client('wss://s.altnet.rippletest.net:51233');
       await client.connect();
 
-      // 2. Create new issuer wallet
-      const issuerWallet = Wallet.generate();
-      console.log('Generated issuer wallet:', issuerWallet.address);
+      // 2. Use fixed issuer wallet (same for all tokens)
+      const issuerWallet = Wallet.fromSeed(FIXED_ISSUER_SEED);
+      console.log('Using fixed issuer wallet:', issuerWallet.address);
 
-      // 3. Create distribution wallet
-      const distributionWallet = Wallet.generate();
-      console.log('Generated distribution wallet:', distributionWallet.address);
+      // 3. Use fixed distribution wallet (same for all tokens)
+      const distributionWallet = Wallet.fromSeed(FIXED_DISTRIBUTOR_SEED);
+      console.log('Using fixed distribution wallet:', distributionWallet.address);
 
-      // 4. Fund both wallets on testnet
-      await client.fundWallet(issuerWallet);
-      console.log('Issuer wallet funded');
-
-      await client.fundWallet(distributionWallet);
-      console.log('Distribution wallet funded');
-
-      // 5. Enable RequireAuth flag on issuer (for KYC/AML compliance)
-      const requireAuthTx: any = {
-        TransactionType: 'AccountSet',
-        Account: issuerWallet.address,
-        SetFlag: 2, // asfRequireAuth
-        Fee: '12',
-      };
-
-      const requireAuthResult = await client.submitAndWait(requireAuthTx, { wallet: issuerWallet });
-      const requireAuthMeta = requireAuthResult.result.meta as any;
-      console.log('RequireAuth enabled:', requireAuthMeta?.TransactionResult);
-
-      if (requireAuthMeta?.TransactionResult !== 'tesSUCCESS') {
-        throw new Error('Failed to enable RequireAuth');
+      // 4. Check if wallets need funding (only for first time setup)
+      try {
+        const issuerInfo = await client.request({
+          command: 'account_info',
+          account: issuerWallet.address,
+          ledger_index: 'validated'
+        });
+        console.log('Issuer wallet already exists and funded');
+      } catch (err: any) {
+        if (err.data?.error === 'actNotFound') {
+          console.log('Funding issuer wallet for the first time...');
+          await client.fundWallet(issuerWallet);
+          console.log('Issuer wallet funded');
+        }
       }
 
-      // 6. Enable Clawback flag on issuer
-      const clawbackTx: any = {
-        TransactionType: 'AccountSet',
-        Account: issuerWallet.address,
-        SetFlag: 16, // asfAllowTrustLineClawback
-        Fee: '12',
-      };
-
-      const clawbackResult = await client.submitAndWait(clawbackTx, { wallet: issuerWallet });
-      const clawbackMeta = clawbackResult.result.meta as any;
-      console.log('Clawback enabled:', clawbackMeta?.TransactionResult);
-
-      if (clawbackMeta?.TransactionResult !== 'tesSUCCESS') {
-        throw new Error('Failed to enable clawback');
+      try {
+        const distInfo = await client.request({
+          command: 'account_info',
+          account: distributionWallet.address,
+          ledger_index: 'validated'
+        });
+        console.log('Distribution wallet already exists and funded');
+      } catch (err: any) {
+        if (err.data?.error === 'actNotFound') {
+          console.log('Funding distribution wallet for the first time...');
+          await client.fundWallet(distributionWallet);
+          console.log('Distribution wallet funded');
+        }
       }
 
-      // 7. Distribution wallet creates trustline to issuer
-      const trustSetTx: any = {
-        TransactionType: 'TrustSet',
-        Account: distributionWallet.address,
-        LimitAmount: {
-          currency: currencyCode,
-          issuer: issuerWallet.address,
-          value: formData.totalSupply,
-        },
-        Fee: '12',
-      };
+      // 5. Enable RequireAuth flag on issuer (for KYC/AML compliance) - only if not already set
+      try {
+        const requireAuthTx: any = {
+          TransactionType: 'AccountSet',
+          Account: issuerWallet.address,
+          SetFlag: 2, // asfRequireAuth
+          Fee: '12',
+        };
 
-      const trustSetResult = await client.submitAndWait(trustSetTx, { wallet: distributionWallet });
-      const trustSetMeta = trustSetResult.result.meta as any;
-      console.log('Trustline created:', trustSetMeta?.TransactionResult);
+        const requireAuthResult = await client.submitAndWait(requireAuthTx, { wallet: issuerWallet });
+        const requireAuthMeta = requireAuthResult.result.meta as any;
+        console.log('RequireAuth enabled:', requireAuthMeta?.TransactionResult);
 
-      if (trustSetMeta?.TransactionResult !== 'tesSUCCESS') {
-        throw new Error('Failed to create trustline');
+        if (requireAuthMeta?.TransactionResult !== 'tesSUCCESS' && requireAuthMeta?.TransactionResult !== 'tecNO_PERMISSION') {
+          throw new Error('Failed to enable RequireAuth');
+        }
+      } catch (err: any) {
+        // If flag already set, ignore error
+        console.log('RequireAuth flag status:', err.message || 'already set or set successfully');
+      }
+
+      // 6. Enable Clawback flag on issuer - only if not already set
+      try {
+        const clawbackTx: any = {
+          TransactionType: 'AccountSet',
+          Account: issuerWallet.address,
+          SetFlag: 16, // asfAllowTrustLineClawback
+          Fee: '12',
+        };
+
+        const clawbackResult = await client.submitAndWait(clawbackTx, { wallet: issuerWallet });
+        const clawbackMeta = clawbackResult.result.meta as any;
+        console.log('Clawback enabled:', clawbackMeta?.TransactionResult);
+
+        if (clawbackMeta?.TransactionResult !== 'tesSUCCESS' && clawbackMeta?.TransactionResult !== 'tecNO_PERMISSION') {
+          throw new Error('Failed to enable clawback');
+        }
+      } catch (err: any) {
+        // If flag already set, ignore error
+        console.log('Clawback flag status:', err.message || 'already set or set successfully');
+      }
+
+      // 7. Distribution wallet creates trustline to issuer for this specific token
+      // Check if trustline already exists
+      let trustlineExists = false;
+      try {
+        const lines = await client.request({
+          command: 'account_lines',
+          account: distributionWallet.address,
+          ledger_index: 'validated'
+        });
+        trustlineExists = lines.result.lines.some((line: any) =>
+          line.currency === currencyCode && line.account === issuerWallet.address
+        );
+      } catch (err) {
+        console.log('Error checking trustlines:', err);
+      }
+
+      if (!trustlineExists) {
+        const trustSetTx: any = {
+          TransactionType: 'TrustSet',
+          Account: distributionWallet.address,
+          LimitAmount: {
+            currency: currencyCode,
+            issuer: issuerWallet.address,
+            value: formData.totalSupply,
+          },
+          Fee: '12',
+        };
+
+        const trustSetResult = await client.submitAndWait(trustSetTx, { wallet: distributionWallet });
+        const trustSetMeta = trustSetResult.result.meta as any;
+        console.log('Trustline created:', trustSetMeta?.TransactionResult);
+
+        if (trustSetMeta?.TransactionResult !== 'tesSUCCESS') {
+          throw new Error('Failed to create trustline');
+        }
+      } else {
+        console.log('Trustline already exists for this token');
       }
 
       // 8. Issuer authorizes distribution wallet's trustline (required for RequireAuth)
@@ -229,6 +286,25 @@ export function IssueTokenDialog({ open, onOpenChange, onSuccess }: IssueTokenDi
         freezeEnabled: false, // Not using Global Freeze to avoid tecFROZEN
       });
       localStorage.setItem('issued_tokens', JSON.stringify(issuedTokens));
+
+      // Register token with yield distribution API
+      try {
+        const dailyYieldRate = parseFloat(formData.dailyYield) / 30; // Convert monthly to daily
+        const response = await fetch('/api/yield-rates', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tokenCode: formData.tokenCode,
+            propertyName: formData.propertyName,
+            dailyYieldRate: dailyYieldRate,
+          }),
+        });
+        const result = await response.json();
+        console.log('Token registered with yield distribution API:', result);
+      } catch (apiErr) {
+        console.error('Failed to register with yield API (non-critical):', apiErr);
+        // Don't fail the whole process if API registration fails
+      }
 
       await client.disconnect();
 
@@ -361,7 +437,7 @@ export function IssueTokenDialog({ open, onOpenChange, onSuccess }: IssueTokenDi
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Total Valuation (RLUSD)
+                  Total Valuation (XRP)
                 </label>
                 <input
                   type="number"
@@ -374,14 +450,14 @@ export function IssueTokenDialog({ open, onOpenChange, onSuccess }: IssueTokenDi
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Daily Yield (%)
+                  Monthly Yield (XRP)
                 </label>
                 <input
                   type="number"
                   step="0.01"
                   value={formData.dailyYield}
                   onChange={(e) => handleInputChange('dailyYield', e.target.value)}
-                  placeholder="e.g., 4.2"
+                  placeholder="e.g., 100"
                   className="w-full px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
                 />
               </div>

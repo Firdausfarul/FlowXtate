@@ -33,21 +33,14 @@ export function DIDManager({ kycData, onUpdate }: DIDManagerProps) {
       // Format: did:xrpl:<network>:<address>
       const didDocument = `did:xrpl:testnet:${account.address}`;
 
+      // Create short DID identifier (max 256 bytes for DIDDocument field)
+      const shortDID = `FlowXtate-${account.address.substring(0, 8)}`;
+
       // Create DIDSet transaction to register DID on-chain
       const didSetTx: any = {
         TransactionType: 'DIDSet',
         Account: account.address,
-        DIDDocument: Buffer.from(JSON.stringify({
-          "@context": "https://www.w3.org/ns/did/v1",
-          "id": didDocument,
-          "verificationMethod": [{
-            "id": `${didDocument}#key-1`,
-            "type": "Ed25519VerificationKey2020",
-            "controller": didDocument,
-            "publicKeyMultibase": account.address
-          }],
-          "authentication": [`${didDocument}#key-1`]
-        })).toString('hex').toUpperCase(),
+        DIDDocument: Buffer.from(shortDID).toString('hex').toUpperCase(),
         URI: Buffer.from(`https://flowxtate.com/did/${account.address}`).toString('hex').toUpperCase(),
         Fee: '12',
       };

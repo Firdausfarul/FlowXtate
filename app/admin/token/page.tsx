@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { TrustlineHoldersList } from "@/components/admin/trustline-holders-list";
 import { CheckAccountFlags } from "@/components/admin/check-account-flags";
+import { AcquisitionProcessor } from "@/components/admin/acquisition-processor";
+import { YieldDistributor } from "@/components/admin/yield-distributor";
 import { Client } from "xrpl";
 import Link from "next/link";
 
@@ -115,9 +117,9 @@ function TokenManagementContent() {
             )}
             {token.dailyYield && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-xs text-gray-600 mb-1">Daily Yield</p>
+                <p className="text-xs text-gray-600 mb-1">Monthly Yield</p>
                 <p className="text-lg font-bold text-green-600">
-                  {token.dailyYield}%
+                  {token.dailyYield} XRP
                 </p>
               </div>
             )}
@@ -136,6 +138,8 @@ function TokenManagementContent() {
       {/* Token Holders & Management */}
       <div className="container px-4 py-8 space-y-6">
         <CheckAccountFlags issuerAddress={token.issuerAddress} />
+        <YieldDistributor />
+        <AcquisitionProcessor />
         <TrustlineHoldersList token={token} />
       </div>
     </div>
