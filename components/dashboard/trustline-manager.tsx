@@ -56,7 +56,7 @@ export function TrustlineManager({ kycData }: TrustlineManagerProps) {
       tokenCode: "RLUSD",
       propertyName: "Ripple USD",
       issuerAddress: RLUSD_ISSUER,
-      currencyCodeHex: "USD",
+      currencyCodeHex: "RLUSD",
     };
 
     setProperties([rlusdProperty, ...tokenProperties]);
@@ -73,6 +73,35 @@ export function TrustlineManager({ kycData }: TrustlineManagerProps) {
     setUserTrustlines(userLines);
   };
 
+  // Convert non-standard currency code to hex format (XRPL requirement)
+  const formatCurrencyCode = (code: string): string => {
+    if (!code) return "";
+    if (code === "XRP") return "XRP";
+    if (code === "RLUSD") return "RLUSD";
+    
+    // If it's already a 40-char hex string, return it
+    if (/^[0-9A-F]{40}$/i.test(code)) return code.toUpperCase();
+
+    // If it's a standard 3-letter alphabetic code, return as is
+    if (code.length === 3 && /^[A-Z0-9]{3}$/i.test(code)) {
+      return code.toUpperCase();
+    }
+
+    // Browser-safe hex conversion for non-standard codes
+    try {
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(code);
+      let hex = "";
+      for (const b of bytes) {
+        hex += b.toString(16).padStart(2, '0');
+      }
+      return hex.toUpperCase().padEnd(40, '0');
+    } catch (e) {
+      console.error("Hex conversion error:", e);
+      return code.toUpperCase().padEnd(40, '0');
+    }
+  };
+
   const createTrustline = async () => {
     if (!account || !selectedProperty) return;
 
@@ -83,8 +112,7 @@ export function TrustlineManager({ kycData }: TrustlineManagerProps) {
       await client.connect();
 
       // Convert currency code to hex
-      const currencyCode = selectedProperty.currencyCodeHex ||
-        Buffer.from(selectedProperty.tokenCode.padEnd(3, '\0')).toString('hex').toUpperCase().padEnd(40, '0');
+      const currencyCode = formatCurrencyCode(selectedProperty.tokenCode);
 
       const isRLUSD = selectedProperty.tokenCode === "RLUSD";
 

@@ -26,14 +26,10 @@ interface TokenHolder {
   balance: string;
 }
 
-// RLUSD issuer on XRPL
-const RLUSD_ISSUER = "rQhWct2fv4Vc4KRjRgMrxa8xPN9Zx9iLKV";
-
 export function AcquisitionDialog({ property, onClose }: AcquisitionDialogProps) {
   const { account } = useWallet();
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<string>("");
-  const [paymentCurrency, setPaymentCurrency] = useState<"XRP" | "RLUSD">("XRP");
 
   // Calculate 130% TVL
   const requiredAmount = (Number(property.totalValuation) * 1.3).toFixed(2);
@@ -115,19 +111,13 @@ export function AcquisitionDialog({ property, onClose }: AcquisitionDialogProps)
       console.log("Fair shares:", fairShares);
 
       // Step 3: User pays acquisition amount via Crossmark
-      setStatus(`Sending ${requiredAmount} ${paymentCurrency} payment...`);
+      setStatus(`Sending ${requiredAmount} XRP payment...`);
 
       const paymentTx = {
         TransactionType: "Payment",
         Account: account.address,
         Destination: property.issuerAddress,
-        Amount: paymentCurrency === "XRP"
-          ? xrpToDrops(requiredAmount)
-          : {
-              currency: "USD",
-              issuer: RLUSD_ISSUER,
-              value: requiredAmount,
-            },
+        Amount: xrpToDrops(requiredAmount),
         Memos: [
           {
             Memo: {
@@ -177,13 +167,7 @@ export function AcquisitionDialog({ property, onClose }: AcquisitionDialogProps)
             TransactionType: "Payment" as const,
             Account: property.issuerAddress,
             Destination: share.address,
-            Amount: paymentCurrency === "XRP"
-              ? xrpToDrops(share.xrpAmount.toFixed(6))
-              : {
-                  currency: "USD",
-                  issuer: RLUSD_ISSUER,
-                  value: share.xrpAmount.toFixed(6),
-                },
+            Amount: xrpToDrops(share.xrpAmount.toFixed(6)),
             Memos: [
               {
                 Memo: {
@@ -235,7 +219,7 @@ export function AcquisitionDialog({ property, onClose }: AcquisitionDialogProps)
       setStatus("Acquisition completed successfully!");
       alert(
         `Property acquired successfully!\n\n` +
-        `You paid: ${requiredAmount} ${paymentCurrency}\n` +
+        `You paid: ${requiredAmount} XRP\n` +
         `Previous holders (${holders.length}) received their fair share\n` +
         `You now own ${totalTokens} ${property.tokenCode} tokens`
       );
@@ -275,7 +259,7 @@ export function AcquisitionDialog({ property, onClose }: AcquisitionDialogProps)
                   <div>
                     <p className="font-semibold text-blue-900 mb-2">Acquisition Process (Automatic)</p>
                     <ul className="text-sm text-blue-800 space-y-1">
-                      <li>• Required payment: <span className="font-bold">{requiredAmount} {paymentCurrency}</span> (130% of TVL)</li>
+                      <li>• Required payment: <span className="font-bold">{requiredAmount} XRP</span> (130% of TVL)</li>
                       <li>• You pay via Crossmark wallet</li>
                       <li>• System automatically clawbacks all tokens from current holders</li>
                       <li>• Current holders receive fair share of your payment</li>
@@ -291,21 +275,9 @@ export function AcquisitionDialog({ property, onClose }: AcquisitionDialogProps)
               </div>
 
               <div>
-                <Label>Payment Currency</Label>
-                <select
-                  value={paymentCurrency}
-                  onChange={(e) => setPaymentCurrency(e.target.value as "XRP" | "RLUSD")}
-                  className="w-full px-3 py-2 border-2 border-yellow-300 rounded-md font-semibold bg-white"
-                >
-                  <option value="XRP">XRP</option>
-                  <option value="RLUSD">RLUSD</option>
-                </select>
-              </div>
-
-              <div>
                 <Label>Required Payment Amount</Label>
                 <Input
-                  value={`${requiredAmount} ${paymentCurrency}`}
+                  value={`${requiredAmount} XRP`}
                   readOnly
                   className="font-bold text-lg bg-green-50 border-green-300"
                 />
@@ -324,7 +296,7 @@ export function AcquisitionDialog({ property, onClose }: AcquisitionDialogProps)
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <p className="text-sm text-gray-900 font-semibold mb-2">What happens next:</p>
                 <ol className="text-xs text-gray-700 space-y-1 list-decimal list-inside">
-                  <li>Crossmark wallet will prompt you to sign payment of {requiredAmount} {paymentCurrency}</li>
+                  <li>Crossmark wallet will prompt you to sign payment of {requiredAmount} XRP</li>
                   <li>After payment succeeds, system automatically processes acquisition</li>
                   <li>All current token holders are clawed back and compensated</li>
                   <li>All {property.tokenCode} tokens are transferred to your wallet</li>

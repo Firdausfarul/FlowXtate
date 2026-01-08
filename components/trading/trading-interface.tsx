@@ -29,6 +29,35 @@ export function TradingInterface({ property }: TradingInterfaceProps) {
   const { account } = useWallet();
   const [activeTab, setActiveTab] = useState("market");
 
+  // Convert non-standard currency code to hex format (XRPL requirement)
+  const formatCurrencyCode = (code: string): string => {
+    if (!code) return "";
+    if (code === "XRP") return "XRP";
+    if (code === "RLUSD") return "RLUSD";
+    
+    // If it's already a 40-char hex string, return it
+    if (/^[0-9A-F]{40}$/i.test(code)) return code.toUpperCase();
+
+    // If it's a standard 3-letter alphabetic code, return as is
+    if (code.length === 3 && /^[A-Z0-9]{3}$/i.test(code)) {
+      return code.toUpperCase();
+    }
+
+    // Browser-safe hex conversion for non-standard codes
+    try {
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(code);
+      let hex = "";
+      for (const b of bytes) {
+        hex += b.toString(16).padStart(2, '0');
+      }
+      return hex.toUpperCase().padEnd(40, '0');
+    } catch (e) {
+      console.error("Hex conversion error:", e);
+      return code.toUpperCase().padEnd(40, '0');
+    }
+  };
+
   // Market tab state (Path Payment)
   const [srcCurrency, setSrcCurrency] = useState("XRP");
   const [destCurrency, setDestCurrency] = useState(property.tokenCode);
@@ -45,49 +74,59 @@ export function TradingInterface({ property }: TradingInterfaceProps) {
   const [limitProcessing, setLimitProcessing] = useState(false);
   const [limitError, setLimitError] = useState("");
 
-  const currencyCode = property.currencyCodeHex || property.tokenCode;
-
   const findPath = async (sendMax: boolean = false) => {
     if (!account || (!srcAmount && !destAmount)) return;
 
+    let client: Client | null = null;
     try {
-      const client = new Client('wss://s.altnet.rippletest.net:51233');
+      client = new Client('wss://s.altnet.rippletest.net:51233');
       await client.connect();
 
-      // Prepare source and destination amounts
+      const srcCurrencyCode = formatCurrencyCode(srcCurrency);
+      const destCurrencyCode = formatCurrencyCode(destCurrency);
+
+      const sAmt = srcAmount && parseFloat(srcAmount) > 0 ? srcAmount : "1";
+      const dAmt = destAmount && parseFloat(destAmount) > 0 ? destAmount : "1";
+
       const sourceAmount = srcCurrency === "XRP"
-        ? (parseFloat(srcAmount || "0") * 1000000).toString()
+        ? Math.floor(parseFloat(sAmt) * 1000000).toString()
         : srcCurrency === "RLUSD"
         ? {
-            currency: "USD",
+            currency: "RLUSD",
             issuer: RLUSD_ISSUER,
-            value: srcAmount || "0",
+            value: sAmt.toString(),
           }
         : {
-            currency: currencyCode,
+            currency: srcCurrencyCode,
             issuer: property.issuerAddress,
-            value: srcAmount || "0",
+            value: sAmt.toString(),
           };
 
       const destinationAmount = destCurrency === "XRP"
-        ? (parseFloat(destAmount || "0") * 1000000).toString()
+        ? Math.floor(parseFloat(dAmt) * 1000000).toString()
         : destCurrency === "RLUSD"
         ? {
-            currency: "USD",
+            currency: "RLUSD",
             issuer: RLUSD_ISSUER,
-            value: destAmount || "0",
+            value: dAmt.toString(),
           }
         : {
-            currency: currencyCode,
+            currency: destCurrencyCode,
             issuer: property.issuerAddress,
-            value: destAmount || "0",
+            value: dAmt.toString(),
           };
 
-      // Use ripple_path_find to find best path
+      console.log('Path find request:', {
+        source_account: account.address,
+        destination_account: account.address,
+        destination_amount: destinationAmount,
+        send_max: sendMax ? sourceAmount : undefined
+      });
+
       const pathRequest: any = {
         command: 'ripple_path_find',
         source_account: account.address,
-        destination_account: account.address, // Self payment
+        destination_account: account.address,
         destination_amount: destinationAmount,
       };
 
@@ -96,19 +135,18 @@ export function TradingInterface({ property }: TradingInterfaceProps) {
       }
 
       const pathResult = await client.request(pathRequest);
-      await client.disconnect();
+      console.log('Path find result:', pathResult);
 
       if (pathResult.result.alternatives && pathResult.result.alternatives.length > 0) {
         const bestPath = pathResult.result.alternatives[0];
         setEstimatedPath(bestPath);
 
-        // Auto-fill the other amount based on path
-        if (sendMax && destAmount === "") {
+        if (sendMax && (!destAmount || destAmount === "1")) {
           const destVal = typeof bestPath.destination_amount === 'string'
             ? parseFloat(bestPath.destination_amount) / 1000000
             : parseFloat(bestPath.destination_amount.value);
           setDestAmount(destVal.toFixed(6));
-        } else if (!sendMax && srcAmount === "") {
+        } else if (!sendMax && (!srcAmount || srcAmount === "1")) {
           const srcVal = typeof bestPath.source_amount === 'string'
             ? parseFloat(bestPath.source_amount) / 1000000
             : parseFloat(bestPath.source_amount.value);
@@ -117,6 +155,8 @@ export function TradingInterface({ property }: TradingInterfaceProps) {
       }
     } catch (err) {
       console.error('Path finding error:', err);
+    } finally {
+      if (client) await client.disconnect();
     }
   };
 
@@ -130,31 +170,34 @@ export function TradingInterface({ property }: TradingInterfaceProps) {
       const client = new Client('wss://s.altnet.rippletest.net:51233');
       await client.connect();
 
+      const srcCurrencyCode = formatCurrencyCode(srcCurrency);
+      const destCurrencyCode = formatCurrencyCode(destCurrency);
+
       // Prepare amounts for Payment transaction
       const sendMaxAmount = srcCurrency === "XRP"
-        ? (parseFloat(srcAmount) * 1000000).toString()
+        ? Math.floor(parseFloat(srcAmount) * 1000000).toString()
         : srcCurrency === "RLUSD"
         ? {
-            currency: "USD",
+            currency: "RLUSD",
             issuer: RLUSD_ISSUER,
             value: srcAmount,
           }
         : {
-            currency: currencyCode,
+            currency: srcCurrencyCode,
             issuer: property.issuerAddress,
             value: srcAmount,
           };
 
       const destinationAmount = destCurrency === "XRP"
-        ? (parseFloat(destAmount) * 1000000).toString()
+        ? Math.floor(parseFloat(destAmount) * 1000000).toString()
         : destCurrency === "RLUSD"
         ? {
-            currency: "USD",
+            currency: "RLUSD",
             issuer: RLUSD_ISSUER,
             value: destAmount,
           }
         : {
-            currency: currencyCode,
+            currency: destCurrencyCode,
             issuer: property.issuerAddress,
             value: destAmount,
           };
@@ -205,6 +248,8 @@ export function TradingInterface({ property }: TradingInterfaceProps) {
       const client = new Client('wss://s.altnet.rippletest.net:51233');
       await client.connect();
 
+      const currencyCode = formatCurrencyCode(property.tokenCode);
+
       // Calculate total XRP needed/received
       const totalXRP = parseFloat(limitAmount) * parseFloat(limitPrice);
 
@@ -213,7 +258,7 @@ export function TradingInterface({ property }: TradingInterfaceProps) {
         TransactionType: 'OfferCreate',
         Account: account.address,
         TakerGets: limitType === "buy"
-          ? (totalXRP * 1000000).toString() // XRP in drops (what seller gets)
+          ? Math.floor(totalXRP * 1000000).toString() // XRP in drops (what seller gets)
           : {
               currency: currencyCode,
               issuer: property.issuerAddress,
@@ -225,7 +270,7 @@ export function TradingInterface({ property }: TradingInterfaceProps) {
               issuer: property.issuerAddress,
               value: limitAmount,
             }
-          : (totalXRP * 1000000).toString(), // XRP in drops (what buyer pays)
+          : Math.floor(totalXRP * 1000000).toString(), // XRP in drops (what buyer pays)
       };
 
       // Sign with Crossmark
