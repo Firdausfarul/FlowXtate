@@ -13,11 +13,14 @@ We utilize the XRPL's built-in Central Limit Order Book (CLOB) to provide 24/7 l
 - **Why DEX over AMM?** We intentionally avoided the XRPL AMM (Constant Product) for property tokens. Real estate transactions are typically large relative to the liquidity pool; in a constant product AMM, this would cause massive **Price Impact (Slippage)**. By using the Native DEX Order Book, we allow for precise pricing and institutional-grade trading without the inefficiencies of an AMM formula.
 - **How we used it:** Every property token is paired with native **XRP** or other stablecoins. Users can place **Limit Orders** using the `OfferCreate` transaction type for transparent price discovery.
 
-### 2. **Clawback (The "Acquisition" & Security Feature)**
-This is our unique exit strategy for fractional investors and a critical security tool.
+### 2. **Clawback (The "Acquisition" & Asset Recovery Engine)**
+In traditional real estate and private equity, one of the greatest hurdles for fractionalized assets is the **Coordination Problem**. When an institutional buyer or a single entity expresses a desire to acquire 100% of a property to repurpose or sell it, coordinating hundreds of small, geographically dispersed fractional holders is nearly impossible. This often leads to "deadlock" where the asset becomes illiquid or undervalued.
+
+- **Inspired by M&A:** Taking a leaf out of the "Merger and Acquisition" playbooks in the stock market, FlowXtate implements a streamlined acquisition flow. This feature allows the platform to overcome the fragmentation of ownership that typically kills large-scale deals.
 - **How we used it:** 
-    - **Acquisitions:** When a major investor (a "Sultan") wants to acquire 100% of a property, the platform uses the **Clawback** functionality to retrieve tokens and distribute fair-share payouts.
-    - **Security/Hack Recovery:** In the event of a verified wallet hack, the issuer can use Clawback to return tokens to the rightful owner, ensuring institutional-grade asset protection.
+    - **Resolution of Deadlock:** When a 100% acquisition offer is verified and funded, the platform utilizes the XRPL **Clawback** functionality to programmatically retrieve property tokens from all current holders. 
+    - **Automated Payouts:** Simultaneously, the system ensures an equitable exit by distributing the fair-share payout in native assets directly to the holders' wallets. This creates a "Guaranteed Exit Strategy" for small investors, ensuring they aren't trapped in a deadlocked asset.
+    - **Asset Protection:** Beyond M&A, Clawback serves as our primary tool for **Hack Recovery**. If an investor's wallet is compromised, the issuer can verify the claim and return the tokens to a secure wallet, providing the same level of security found in traditional banking.
 - **Requirement:** All property issuer accounts are initialized with the `lsfAllowTrustLineClawback` flag enabled.
 
 ### 3. **Freeze Functionality (Regulatory Compliance)**
