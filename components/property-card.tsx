@@ -35,7 +35,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const minInvestment = pricePerToken * 100; // Minimum 100 tokens
 
   return (
-    <Link href={`/properties/${property.tokenCode}`}>
+    <Link href={`/property?code=${property.tokenCode}`}>
       <Card className="border-2 border-yellow-200 hover:border-yellow-400 transition-all hover:shadow-lg cursor-pointer h-full flex flex-col">
         <CardHeader className="pb-4">
           {/* Property Image Placeholder */}

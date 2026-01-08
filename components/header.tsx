@@ -3,7 +3,7 @@
 import { useWallet } from '@/lib/wallet-context';
 import { WalletConnectButton } from './wallet-connect-button';
 import { WalletStatus } from './wallet-status';
-import { Building2, ShieldCheck } from 'lucide-react';
+import { Building2, ShieldCheck, User } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from './ui/button';
 
@@ -31,12 +31,20 @@ export function Header() {
             </Button>
           </Link>
           {isConnected && (
-            <Link href="/admin">
-              <Button variant="outline" size="sm" className="border-yellow-400 hover:bg-yellow-50">
-                <ShieldCheck className="h-4 w-4 mr-2" />
-                Admin
-              </Button>
-            </Link>
+            <>
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="text-gray-700 hover:text-yellow-600 hover:bg-yellow-50">
+                  <User className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Link href="/admin">
+                <Button variant="outline" size="sm" className="border-yellow-400 hover:bg-yellow-50">
+                  <ShieldCheck className="h-4 w-4 mr-2" />
+                  Admin
+                </Button>
+              </Link>
+            </>
           )}
           {isConnected ? (
             <WalletStatus />

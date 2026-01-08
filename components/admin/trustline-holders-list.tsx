@@ -139,9 +139,10 @@ export function TrustlineHoldersList({ token }: TrustlineHoldersListProps) {
       };
 
       const result = await client.submitAndWait(accountSetTx, { wallet: issuerWallet });
+      const resultMeta = result.result.meta as any;
 
-      if (result.result.meta.TransactionResult !== 'tesSUCCESS') {
-        throw new Error(`Transaction failed: ${result.result.meta.TransactionResult}`);
+      if (resultMeta?.TransactionResult !== 'tesSUCCESS') {
+        throw new Error(`Transaction failed: ${resultMeta?.TransactionResult}`);
       }
 
       await client.disconnect();
@@ -188,9 +189,10 @@ export function TrustlineHoldersList({ token }: TrustlineHoldersListProps) {
       };
 
       const result = await client.submitAndWait(trustSetTx, { wallet: issuerWallet });
+      const freezeMeta = result.result.meta as any;
 
-      if (result.result.meta.TransactionResult !== 'tesSUCCESS') {
-        throw new Error(`Transaction failed: ${result.result.meta.TransactionResult}`);
+      if (freezeMeta?.TransactionResult !== 'tesSUCCESS') {
+        throw new Error(`Transaction failed: ${freezeMeta?.TransactionResult}`);
       }
 
       await client.disconnect();
@@ -232,9 +234,10 @@ export function TrustlineHoldersList({ token }: TrustlineHoldersListProps) {
       };
 
       const result = await client.submitAndWait(clawbackTx, { wallet: issuerWallet });
+      const clawbackMeta = result.result.meta as any;
 
-      if (result.result.meta.TransactionResult !== 'tesSUCCESS') {
-        throw new Error(`Transaction failed: ${result.result.meta.TransactionResult}`);
+      if (clawbackMeta?.TransactionResult !== 'tesSUCCESS') {
+        throw new Error(`Transaction failed: ${clawbackMeta?.TransactionResult}`);
       }
 
       await client.disconnect();

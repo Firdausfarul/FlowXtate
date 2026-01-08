@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,10 +30,10 @@ interface TokenData {
   freezeEnabled: boolean;
 }
 
-export default function TokenManagementPage() {
-  const params = useParams();
+function TokenManagementContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
-  const tokenCode = params.tokenCode as string;
+  const tokenCode = searchParams.get('code') || '';
 
   const [token, setToken] = useState<TokenData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -139,5 +139,17 @@ export default function TokenManagementPage() {
         <TrustlineHoldersList token={token} />
       </div>
     </div>
+  );
+}
+
+export default function TokenManagementPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <RefreshCw className="h-8 w-8 animate-spin text-yellow-500" />
+      </div>
+    }>
+      <TokenManagementContent />
+    </Suspense>
   );
 }

@@ -93,9 +93,10 @@ export function IssueTokenDialog({ open, onOpenChange, onSuccess }: IssueTokenDi
       };
 
       const requireAuthResult = await client.submitAndWait(requireAuthTx, { wallet: issuerWallet });
-      console.log('RequireAuth enabled:', requireAuthResult.result.meta.TransactionResult);
+      const requireAuthMeta = requireAuthResult.result.meta as any;
+      console.log('RequireAuth enabled:', requireAuthMeta?.TransactionResult);
 
-      if (requireAuthResult.result.meta.TransactionResult !== 'tesSUCCESS') {
+      if (requireAuthMeta?.TransactionResult !== 'tesSUCCESS') {
         throw new Error('Failed to enable RequireAuth');
       }
 
@@ -108,9 +109,10 @@ export function IssueTokenDialog({ open, onOpenChange, onSuccess }: IssueTokenDi
       };
 
       const clawbackResult = await client.submitAndWait(clawbackTx, { wallet: issuerWallet });
-      console.log('Clawback enabled:', clawbackResult.result.meta.TransactionResult);
+      const clawbackMeta = clawbackResult.result.meta as any;
+      console.log('Clawback enabled:', clawbackMeta?.TransactionResult);
 
-      if (clawbackResult.result.meta.TransactionResult !== 'tesSUCCESS') {
+      if (clawbackMeta?.TransactionResult !== 'tesSUCCESS') {
         throw new Error('Failed to enable clawback');
       }
 
@@ -127,9 +129,10 @@ export function IssueTokenDialog({ open, onOpenChange, onSuccess }: IssueTokenDi
       };
 
       const trustSetResult = await client.submitAndWait(trustSetTx, { wallet: distributionWallet });
-      console.log('Trustline created:', trustSetResult.result.meta.TransactionResult);
+      const trustSetMeta = trustSetResult.result.meta as any;
+      console.log('Trustline created:', trustSetMeta?.TransactionResult);
 
-      if (trustSetResult.result.meta.TransactionResult !== 'tesSUCCESS') {
+      if (trustSetMeta?.TransactionResult !== 'tesSUCCESS') {
         throw new Error('Failed to create trustline');
       }
 
@@ -147,9 +150,10 @@ export function IssueTokenDialog({ open, onOpenChange, onSuccess }: IssueTokenDi
       };
 
       const authorizeResult = await client.submitAndWait(authorizeTx, { wallet: issuerWallet });
-      console.log('Trustline authorized:', authorizeResult.result.meta.TransactionResult);
+      const authorizeMeta = authorizeResult.result.meta as any;
+      console.log('Trustline authorized:', authorizeMeta?.TransactionResult);
 
-      if (authorizeResult.result.meta.TransactionResult !== 'tesSUCCESS') {
+      if (authorizeMeta?.TransactionResult !== 'tesSUCCESS') {
         throw new Error('Failed to authorize trustline');
       }
 
@@ -167,9 +171,10 @@ export function IssueTokenDialog({ open, onOpenChange, onSuccess }: IssueTokenDi
       };
 
       const mintResult = await client.submitAndWait(mintTx, { wallet: issuerWallet });
-      console.log('Tokens minted:', mintResult.result.meta.TransactionResult);
+      const mintMeta = mintResult.result.meta as any;
+      console.log('Tokens minted:', mintMeta?.TransactionResult);
 
-      if (mintResult.result.meta.TransactionResult !== 'tesSUCCESS') {
+      if (mintMeta?.TransactionResult !== 'tesSUCCESS') {
         throw new Error('Failed to mint tokens');
       }
 
@@ -193,9 +198,10 @@ export function IssueTokenDialog({ open, onOpenChange, onSuccess }: IssueTokenDi
       };
 
       const offerResult = await client.submitAndWait(offerCreateTx, { wallet: distributionWallet });
-      console.log('DEX offer created:', offerResult.result.meta.TransactionResult);
+      const offerMeta = offerResult.result.meta as any;
+      console.log('DEX offer created:', offerMeta?.TransactionResult);
 
-      if (offerResult.result.meta.TransactionResult !== 'tesSUCCESS') {
+      if (offerMeta?.TransactionResult !== 'tesSUCCESS') {
         throw new Error('Failed to create DEX offer');
       }
 

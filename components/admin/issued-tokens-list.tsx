@@ -222,7 +222,7 @@ export function IssuedTokensList() {
               </div>
             </CardContent>
             <CardFooter className="pt-4 border-t border-yellow-200">
-              <Link href={`/admin/tokens/${token.tokenCode}`} className="w-full">
+              <Link href={`/admin/token?code=${token.tokenCode}`} className="w-full">
                 <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white">
                   <Settings className="h-4 w-4 mr-2" />
                   Manage Token
